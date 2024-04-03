@@ -1,0 +1,43 @@
+
+
+---
+- hosts: all_servers
+  become: true
+
+  vars:
+    github_repo:https://github.com/manafak/assignment-altsch.git
+    app_name: assignment-altsch
+    app_path: /var/www/{{ assignment-altsch }}
+
+  tasks:
+    - name: Update package lists
+      apt: update_cache=yes state=present cache_valid_time=3600
+      yum: name=* state=latest
+
+    - name: Install Git
+      apt: name=git state=present
+      yum: name=git state=present
+
+    - name: Clone the app repository
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ app_path }}"
+        update: yes
+
+    - name: Ensure app directory exists
+      file:
+        path: "{{ app_path }}"
+        state: directory
+        mode: 0755
+
+    - name: Copy app files (if needed)
+      copy:
+        src: "{{ app_path }}/src"
+        dest: "{{ app_path }}"
+        recurse: yes
+
+    - name: Reload service (if needed, adjust for your app)
+      service:
+        name: "{{ assignment-altsch }}"
+        state: reloaded
+        enabled: yes
